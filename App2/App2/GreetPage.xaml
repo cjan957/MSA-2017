@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="App2.GreetPage">
+    <!--<ContentPage.Padding>
+        <OnPlatform x:Arguments="Thickness"
+            iOS="0,20,0,0"
+            Android="0,30,0,0">
+        </OnPlatform>
+    </ContentPage.Padding>
+    -->
+    <!--
+    <StackLayout 
+        BindingContext="{x:Reference slider}" 
+        HorizontalOptions="Center">
+        <BoxView Color="Red" Opacity="{Binding Value}"></BoxView>
+        <Label
+               
+            Text="{Binding Value, 
+            StringFormat='Value is {0:F2}' }"
+               
+               Opacity="{Binding Value}"
+               />
+        <Slider x:Name="slider" />
+        <Button x:Name="testButton" Text="StackLayout" VerticalOptions="Start" Clicked ="testButton_Clicked" 
+        HorizontalOptions="FillAndExpand" />
+        <BoxView Color="#FFF724" VerticalOptions="FillAndExpand"
+        HorizontalOptions="FillAndExpand" />
+        <BoxView Color="#FF001F" VerticalOptions="FillAndExpand"
+             HorizontalOptions="FillAndExpand" />
+        <BoxView HeightRequest="75" Color="#1491CC" VerticalOptions="End"
+            HorizontalOptions="FillAndExpand" />
+    </StackLayout>
+    -->
+    <StackLayout Margin="20" Orientation="Vertical">
+        <Button Text="TAke photo" Clicked="loadCamera" />
+        <Image x:Name="image" />
+    </StackLayout>
+</ContentPage>
