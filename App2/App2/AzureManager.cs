@@ -29,6 +29,10 @@ namespace App2
             return await this.faceInfoTable.ToListAsync();
         }
 
+        public async Task PostFaceAnalysisInformation(FaceInfo faceInfo)
+        {
+            await this.faceInfoTable.InsertAsync(faceInfo);
+        }
 
         public MobileServiceClient AzureClient
         {
