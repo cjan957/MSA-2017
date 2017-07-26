@@ -8,7 +8,12 @@
             <local:Vision/>
         </x:Arguments>
     </NavigationPage>
-    <local:AzureTable/>
+    
+    <NavigationPage Title = "History">
+        <x:Arguments>
+            <local:AzureTable/>
+        </x:Arguments>
+    </NavigationPage>
 </TabbedPage>
 <!--<ContentPage.Padding>
         <OnPlatform x:Arguments="Thickness"

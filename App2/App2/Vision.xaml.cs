@@ -46,7 +46,9 @@ namespace App2
 
                 imageGallery.Source = ImageSource.FromStream(() =>
                 {
+
                     return photo.GetStream();
+                    
                 });
             }
             else
