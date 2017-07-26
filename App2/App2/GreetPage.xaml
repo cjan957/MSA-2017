@@ -1,8 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<TabbedPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:App2"
              x:Class="App2.GreetPage">
-    <!--<ContentPage.Padding>
+    <NavigationPage Title= "Analyse">
+        <x:Arguments>
+            <local:Vision/>
+        </x:Arguments>
+    </NavigationPage>
+    <local:AzureTable/>
+</TabbedPage>
+<!--<ContentPage.Padding>
         <OnPlatform x:Arguments="Thickness"
             iOS="0,20,0,0"
             Android="0,30,0,0">
@@ -32,8 +40,16 @@
             HorizontalOptions="FillAndExpand" />
     </StackLayout>
     -->
+
+    
+
+<!--
     <StackLayout Margin="20" Orientation="Vertical">
-        <Button Text="TAke photo" Clicked="loadCamera" />
+        <Label TextColor="#77d065" FontSize ="20" Text="Browse a photo to compare" />
+        <Button x:Name="myButton" Text="Browse..." Clicked= "browsePhoto" />
+        <Image x:Name="imageGallery"/>
+        <Label TextColor="#77d065" FontSize="20" Text="Take a photo"/>
+        <Button Text="Launch Camera and Analyse" Clicked="loadCamera" />
         <Image x:Name="image" />
     </StackLayout>
-</ContentPage>
+    -->
