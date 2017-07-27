@@ -15,12 +15,17 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using Tabs.Model;
+using App2.DataModels;
 
 namespace App2
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class Vision : ContentPage
     {
+
+        MediaFile cameraFile;
+        MediaFile galleryFile;
+
         public Vision()
         {
             InitializeComponent();
@@ -40,15 +45,13 @@ namespace App2
         {
             if (CrossMedia.Current.IsPickPhotoSupported)
             {
-                MediaFile photo = await CrossMedia.Current.PickPhotoAsync();
-                if (photo == null)
+                galleryFile = await CrossMedia.Current.PickPhotoAsync();
+                if (galleryFile == null)
                     return;
 
                 imageGallery.Source = ImageSource.FromStream(() =>
                 {
-
-                    return photo.GetStream();
-                    
+                    return galleryFile.GetStream();                  
                 });
             }
             else
@@ -56,7 +59,6 @@ namespace App2
                 await DisplayAlert("Error", "Cannot launch photo picker. Check if the permission is correctly set", "OK");
             }
         }
-
 
         private async void loadCamera(object sender, EventArgs e)
         {
@@ -66,27 +68,41 @@ namespace App2
                 await DisplayAlert("No camera", "No camera is available", "OK");
             }
 
-            MediaFile file = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions
+            cameraFile = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions
             {
                 PhotoSize = Plugin.Media.Abstractions.PhotoSize.Medium,
                 Directory = "sample",
                 Name = $"{DateTime.UtcNow}.jpg"
             });
 
-            if (file == null)
+            if (cameraFile == null)
                 return;
 
             image.Source = ImageSource.FromStream(() =>
             {
-                return file.GetStream();
+                return cameraFile.GetStream();
             });
 
-            await analyseTheFace(file);
+            //await analyseTheFace(cameraFile);
 
-            file.Dispose();
+            //cameraFile.Dispose();
         }
 
-        private async Task analyseTheFace(MediaFile file)
+        private async void analyse(object sender, EventArgs e)
+        {
+            if (cameraFile != null && cameraFile != null)
+            {
+                await analyseTheFace(cameraFile, galleryFile);
+                cameraFile.Dispose();
+                galleryFile.Dispose();
+            }
+            else
+            {
+                await DisplayAlert("Alert", "Take photos first!", "OK");
+            }
+        }
+
+        private async Task analyseTheFace(MediaFile file, MediaFile file2)
         {
             const string subscriptionKey = "d3ba5bb7fd3f408897632bb39782b57e";
             const string connectionEndPoint = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
@@ -120,11 +136,31 @@ namespace App2
 
                         Debug.WriteLine(JsonPrettyPrint(responseStringCleaned3));
 
-                        EvaluationModel responseModel = JsonConvert.DeserializeObject<EvaluationModel>(responseStringCleaned3);
+                        List<EvaluationModel> responseModel = JsonConvert.DeserializeObject<List<EvaluationModel>>(responseString);
 
-                        string faceID = responseModel.faceId;
+                        int faceCount = responseModel.Count;
+                        for (int i = 0; i < faceCount; i++)
+                        {
+                            Debug.WriteLine("Face Count = " + i);
+
+                        }
+
+                        EvaluationModel faceToWorkWith = responseModel[0];
+
+                        string faceID = faceToWorkWith.faceId;
 
                         Debug.WriteLine(JsonPrettyPrint(responseString));
+
+                        FaceInfo model = new FaceInfo()
+                        {
+                            FaceID = faceToWorkWith.faceId,
+                            Happiness = (float)faceToWorkWith.faceAttributes.smile,
+                            Gender = faceToWorkWith.faceAttributes.gender
+                        };
+
+                        await AzureManager.AzureManagerInstance.PostFaceAnalysisInformation(model);
+
+
                     }
                 }
                 catch (Exception e)

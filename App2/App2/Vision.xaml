@@ -9,8 +9,9 @@
             <Button x:Name="myButton" Text="Browse..." Clicked= "browsePhoto" />
             <Image x:Name="imageGallery" HeightRequest="100" WidthRequest="50"/>
             <Label TextColor="#77d065" FontSize="20" Text="Take a photo"/>
-            <Button Text="Launch Camera and Analyse" Clicked="loadCamera" />
-            <Image x:Name="image" />
+            <Button Text="Launch Camera" Clicked="loadCamera" />
+            <Image x:Name="image" HeightRequest="100" WidthRequest="50"/>
+            <Button Text="Analyse" Clicked= "analyse"/>
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>
