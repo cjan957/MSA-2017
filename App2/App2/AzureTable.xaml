@@ -8,14 +8,14 @@
     </ContentPage.Padding>
     <ContentPage.Content>
         <StackLayout>
-            <Button Text="See Photo Information" TextColor="White" BackgroundColor="Red" Clicked="Handle_ClickedAsync" />
+            <Button Text="See Match Results" TextColor="Black" BackgroundColor="WhiteSmoke" Clicked="Handle_ClickedAsync" />
             <ListView x:Name="FaceList" HasUnevenRows="True">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
                             <StackLayout Orientation="Horizontal">
-                                <Label Text="{Binding FaceID, StringFormat='FaceID: {0:N}'}" HorizontalOptions="FillAndExpand" Margin="20,0,0,0" VerticalTextAlignment="Center" />
-                                <Label Text="{Binding Gender, StringFormat='Gender: {0:N}'}" VerticalTextAlignment="Center" Margin="0,0,20,0" />
+                                <Label Text="{Binding Age1, StringFormat='Age (From Camera): {0:N}'}" HorizontalOptions="FillAndExpand" Margin="20,0,0,0" VerticalTextAlignment="Center" />
+                                <Label Text="{Binding Age2, StringFormat='Age (From Selected Photo): {0:N}'}" VerticalTextAlignment="Center" Margin="0,0,20,0" />
                             </StackLayout>
                         </ViewCell>
                     </DataTemplate>

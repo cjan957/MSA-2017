@@ -12,13 +12,19 @@ namespace App2.DataModels
         [JsonProperty(PropertyName = "Id")]
         public string ID { get; set; }
 
-        [JsonProperty(PropertyName = "FaceID")]
-        public string FaceID { get; set; }
+        [JsonProperty(PropertyName = "FaceId1")]
+        public string FaceId1 { get; set; }
 
-        [JsonProperty(PropertyName = "Happiness")]
-        public float Happiness { get; set; }
+        [JsonProperty(PropertyName = "FaceId2")]
+        public string FaceId2 { get; set; }
 
-        [JsonProperty(PropertyName = "Gender")]
-        public string Gender { get; set; }
+        [JsonProperty(PropertyName = "Age1")]
+        public double Age1 { get; set; }
+
+        [JsonProperty(PropertyName = "Age2")]
+        public double Age2 { get; set; }
+
+        //[JsonProperty(PropertyName = "Gender")]
+        //public string Gender { get; set; }
     }
 }
