@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -19,9 +20,11 @@ using App2.DataModels;
 using App2.Model;
 
 
+
 namespace App2
 {
-    [XamlCompilation(XamlCompilationOptions.Compile)]
+
+[XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class Vision : ContentPage
     {
 
@@ -29,10 +32,15 @@ namespace App2
         MediaFile galleryFile;
         String cameraFaceID;
         double camereFaceAge;
+        byte[] byteData_camera;
+        byte[] byteData_gallery;
+
 
         public Vision()
         {
             InitializeComponent();
+            image.Source = "emptyProfile.jpg";
+            imageGallery.Source = "emptyProfile.jpg";
         }
 
         async void testButton_Clicked(object sender, EventArgs e)
@@ -94,10 +102,12 @@ namespace App2
 
         private async void analyse(object sender, EventArgs e)
         {
-            if (cameraFile != null && cameraFile != null)
+            if (cameraFile != null && galleryFile != null)
             {
                 DisableButtons();
                 await analyseTheFace(cameraFile, galleryFile);
+                cameraFile = null;
+                galleryFile = null;
             }
             else
             {
@@ -110,6 +120,8 @@ namespace App2
             myButton.IsEnabled = true;
             AnalyseButton.IsEnabled = true;
             CameraButton.IsEnabled = true;
+            image.Source = "emptyProfile.jpg";
+            imageGallery.Source = "emptyProfile.jpg";
         }
 
         private void DisableButtons()
@@ -117,15 +129,14 @@ namespace App2
             myButton.IsEnabled = false;
             AnalyseButton.IsEnabled = false;
             CameraButton.IsEnabled = false;
+            
         }
 
-
-        private async Task analyseTheFace(MediaFile camerafile, MediaFile galleryfile2)
+    private async Task analyseTheFace(MediaFile camerafile, MediaFile galleryfile2)
         {
             const string subscriptionKey = "d3ba5bb7fd3f408897632bb39782b57e";
             const string connectionEndPoint = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
             
-
             //First we'll check to make sure that there's only 1 person in the camera file (1 person taking a selfie only)
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
@@ -137,8 +148,8 @@ namespace App2
             HttpResponseMessage response_gallery;
             HttpResponseMessage response_verify;
 
-            byte[] byteData_camera = GetImageAsByteArray(camerafile);
-            byte[] byteData_gallery = GetImageAsByteArray(galleryfile2);
+            byteData_camera = GetImageAsByteArray(camerafile);
+            byteData_gallery = GetImageAsByteArray(galleryfile2);
 
             using (var content = new ByteArrayContent(byteData_camera))
             {
@@ -156,10 +167,12 @@ namespace App2
                         if (faceCount > 1)
                         {
                             await DisplayAlert("Multiple faces detected", "Multiple people detected in your selfie. Please try again ", "OK");
+                            EnableButtons();
                         }
                         else if(faceCount == 0)
                         {
                             await DisplayAlert("No faces detected", "No one was found in the photo. Try taking a photo in a better lighting condition", "OK");
+                            EnableButtons();
                         }
                         else
                         { 
@@ -172,7 +185,10 @@ namespace App2
                                 photoContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
                                 try
                                 {
-                                    response_gallery = await client.PostAsync(urlToRequest, photoContent);
+                                    HttpClient clientSecondImage = new HttpClient();
+                                    clientSecondImage.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+
+                                    response_gallery = await clientSecondImage.PostAsync(urlToRequest, photoContent);
                                     if (response_gallery.IsSuccessStatusCode)
                                     {
                                         var response2String = await response_gallery.Content.ReadAsStringAsync();
@@ -181,6 +197,7 @@ namespace App2
                                         if (faceCountInGallery == 0)
                                         {
                                             await DisplayAlert("No faces detected", "No one was found in the photo. Try again or use a different photo", "OK");
+                                            EnableButtons();
                                         }
                                         else
                                         {
@@ -217,8 +234,10 @@ namespace App2
                                                             matched = true;
                                                             FaceInfo model = new FaceInfo()
                                                             {
+
                                                                 FaceId1 = cameraFaceID,
                                                                 FaceId2 = responseModel2[i].faceId,
+                                                                timeStamp = DateTime.UtcNow,
                                                                 Age1 = camereFaceAge,
                                                                 Age2 = responseModel2[i].faceAttributes.age
                                                             };
@@ -230,12 +249,12 @@ namespace App2
                                             }
                                             if(matched == true)
                                             {
-                                                await DisplayAlert("Matched Found!", "Yes you are in the photo, See match history and age comparison in History tab", "OK");
+                                                await DisplayAlert("Match Found!", "You are in the photo! Go to the History tab to see age comparison.", "OK");
                                                 EnableButtons();
                                             }
                                             else
                                             {
-                                                await DisplayAlert("No match found!", "Sorry, no match of the face between two photos found", "OK");
+                                                await DisplayAlert("No match found.", "Sorry, we could not find a match of the face between the two photos", "OK");
                                                 EnableButtons();
                                             }
                                         }
@@ -280,7 +299,9 @@ namespace App2
         {
             var fileStream = imageFile.GetStream();
             BinaryReader binaryReader = new BinaryReader(fileStream);
-            return binaryReader.ReadBytes((int)fileStream.Length);
+            byte[] toReturn = binaryReader.ReadBytes((int)fileStream.Length);
+            binaryReader.Dispose();
+            return toReturn;
         }
 
 
