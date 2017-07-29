@@ -12,8 +12,8 @@ namespace App2.DataModels
         [JsonProperty(PropertyName = "Id")]
         public string ID { get; set; }
 
-        [JsonProperty(PropertyName = "timestamp")]
-        public DateTime timeStamp { get; set; }
+        //[JsonProperty(PropertyName = "timestamp")]
+        //public DateTime timeStamp { get; set; }
 
         [JsonProperty(PropertyName = "FaceId1")]
         public string FaceId1 { get; set; }

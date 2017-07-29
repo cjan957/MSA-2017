@@ -111,7 +111,7 @@ namespace App2
             }
             else
             {
-                await DisplayAlert("Missing Photos", "Pick a photo from the gallery and take a photo of yourself first!", "Got it");
+                await DisplayAlert("Missing Photos", "Pick a photo from the gallery and take a photo first!", "Got it");
             }
         }
 
@@ -134,165 +134,172 @@ namespace App2
 
     private async Task analyseTheFace(MediaFile camerafile, MediaFile galleryfile2)
         {
-            const string subscriptionKey = "d3ba5bb7fd3f408897632bb39782b57e";
-            const string connectionEndPoint = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
-            
-            //First we'll check to make sure that there's only 1 person in the camera file (1 person taking a selfie only)
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
-            string requestParameters = "returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile";
-
-            string urlToRequest = connectionEndPoint + "?" + requestParameters;
-
-            HttpResponseMessage response;
-            HttpResponseMessage response_gallery;
-            HttpResponseMessage response_verify;
-
-            byteData_camera = GetImageAsByteArray(camerafile);
-            byteData_gallery = GetImageAsByteArray(galleryfile2);
-
-            using (var content = new ByteArrayContent(byteData_camera))
+            try
             {
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                try
+                const string subscriptionKey = "d3ba5bb7fd3f408897632bb39782b57e";
+                const string connectionEndPoint = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
+
+                //First we'll check to make sure that there's only 1 person in the camera file (1 person taking a selfie only)
+                HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+                string requestParameters = "returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile";
+
+                string urlToRequest = connectionEndPoint + "?" + requestParameters;
+
+                HttpResponseMessage response;
+                HttpResponseMessage response_gallery;
+                HttpResponseMessage response_verify;
+
+                byteData_camera = GetImageAsByteArray(camerafile);
+                byteData_gallery = GetImageAsByteArray(galleryfile2);
+
+                using (var content = new ByteArrayContent(byteData_camera))
                 {
-                    response = await client.PostAsync(urlToRequest, content);
-                    Debug.WriteLine(response);
-                    if (response.IsSuccessStatusCode)
+                    content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    try
                     {
-                        var responseString = await response.Content.ReadAsStringAsync();
-                        List<EvaluationModel> responseModel = JsonConvert.DeserializeObject<List<EvaluationModel>>(responseString);
-
-                        int faceCount = responseModel.Count;
-                        if (faceCount > 1)
+                        response = await client.PostAsync(urlToRequest, content);
+                        Debug.WriteLine(response);
+                        if (response.IsSuccessStatusCode)
                         {
-                            await DisplayAlert("Multiple faces detected", "Multiple people detected in your selfie. Please try again ", "OK");
-                            EnableButtons();
-                        }
-                        else if(faceCount == 0)
-                        {
-                            await DisplayAlert("No faces detected", "No one was found in the photo. Try taking a photo in a better lighting condition", "OK");
-                            EnableButtons();
-                        }
-                        else
-                        { 
-                            EvaluationModel faceToWorkWith = responseModel[0];
-                            cameraFaceID = faceToWorkWith.faceId;
-                            camereFaceAge = faceToWorkWith.faceAttributes.age;
+                            var responseString = await response.Content.ReadAsStringAsync();
+                            List<EvaluationModel> responseModel = JsonConvert.DeserializeObject<List<EvaluationModel>>(responseString);
 
-                            using (var photoContent = new ByteArrayContent(byteData_gallery))
+                            int faceCount = responseModel.Count;
+                            if (faceCount > 1)
                             {
-                                photoContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                                try
+                                await DisplayAlert("Multiple faces detected", "Multiple people detected in your camera photo. Please try again ", "OK");
+                                EnableButtons();
+                            }
+                            else if (faceCount == 0)
+                            {
+                                await DisplayAlert("No faces detected", "No one was found in the photo. Try taking a photo in a better lighting condition", "OK");
+                                EnableButtons();
+                            }
+                            else
+                            {
+                                EvaluationModel faceToWorkWith = responseModel[0];
+                                cameraFaceID = faceToWorkWith.faceId;
+                                camereFaceAge = faceToWorkWith.faceAttributes.age;
+
+                                using (var photoContent = new ByteArrayContent(byteData_gallery))
                                 {
-                                    HttpClient clientSecondImage = new HttpClient();
-                                    clientSecondImage.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
-
-                                    response_gallery = await clientSecondImage.PostAsync(urlToRequest, photoContent);
-                                    if (response_gallery.IsSuccessStatusCode)
+                                    photoContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                                    try
                                     {
-                                        var response2String = await response_gallery.Content.ReadAsStringAsync();
-                                        List<EvaluationModel> responseModel2 = JsonConvert.DeserializeObject<List<EvaluationModel>>(response2String);
-                                        int faceCountInGallery = responseModel2.Count;
-                                        if (faceCountInGallery == 0)
+                                        HttpClient clientSecondImage = new HttpClient();
+                                        clientSecondImage.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+
+                                        response_gallery = await clientSecondImage.PostAsync(urlToRequest, photoContent);
+                                        if (response_gallery.IsSuccessStatusCode)
                                         {
-                                            await DisplayAlert("No faces detected", "No one was found in the photo. Try again or use a different photo", "OK");
-                                            EnableButtons();
-                                        }
-                                        else
-                                        {
-                                            bool matched = false;
-                                            for (int i = 0; i < faceCountInGallery; i++) {
-                                                const string connectionEndPoint_Verify = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/verify?";
-                                                HttpClient client_verify = new HttpClient();
-                                                client_verify.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
-                                                //string requestParametersVerify = "returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile";
-
-                                                string urlToRequestVerify = connectionEndPoint_Verify;
-                                                HttpResponseMessage verifyResult;
-
-                                                FaceVerifyModel faceToMatchModel = new FaceVerifyModel()
-                                                {
-                                                    faceId1 = cameraFaceID,
-                                                    faceId2 = responseModel2[i].faceId
-                                                };
-
-                                                var json = JsonConvert.SerializeObject(faceToMatchModel);
-
-                                                byte[] byteDataVerify = Encoding.UTF8.GetBytes(json);
-
-                                                using (var contentVerify = new ByteArrayContent(byteDataVerify))
-                                                {
-                                                    contentVerify.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                                                    response_verify = await client.PostAsync(urlToRequestVerify, contentVerify);
-                                                    if (response_verify.IsSuccessStatusCode)
-                                                    {
-                                                        var verifyResponseToString = await response_verify.Content.ReadAsStringAsync();
-                                                        var verifyResponseJson = JsonConvert.DeserializeObject<VerifyResponseModel>(verifyResponseToString);
-                                                        if(verifyResponseJson.isIdentical == true)
-                                                        {
-                                                            matched = true;
-                                                            FaceInfo model = new FaceInfo()
-                                                            {
-
-                                                                FaceId1 = cameraFaceID,
-                                                                FaceId2 = responseModel2[i].faceId,
-                                                                timeStamp = DateTime.UtcNow,
-                                                                Age1 = camereFaceAge,
-                                                                Age2 = responseModel2[i].faceAttributes.age
-                                                            };
-                                                            await AzureManager.AzureManagerInstance.PostFaceAnalysisInformation(model);
-                                                            i = faceCountInGallery;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            if(matched == true)
+                                            var response2String = await response_gallery.Content.ReadAsStringAsync();
+                                            List<EvaluationModel> responseModel2 = JsonConvert.DeserializeObject<List<EvaluationModel>>(response2String);
+                                            int faceCountInGallery = responseModel2.Count;
+                                            if (faceCountInGallery == 0)
                                             {
-                                                await DisplayAlert("Match Found!", "You are in the photo! Go to the History tab to see age comparison.", "OK");
+                                                await DisplayAlert("No faces detected", "No one was found in the photo. Try again or use a different photo", "OK");
                                                 EnableButtons();
                                             }
                                             else
                                             {
-                                                await DisplayAlert("No match found.", "Sorry, we could not find a match of the face between the two photos", "OK");
-                                                EnableButtons();
+                                                bool matched = false;
+                                                for (int i = 0; i < faceCountInGallery; i++)
+                                                {
+                                                    const string connectionEndPoint_Verify = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/verify?";
+                                                    HttpClient client_verify = new HttpClient();
+                                                    client_verify.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+                                                    //string requestParametersVerify = "returnFaceId=true&returnFaceLandmarks=false&returnFaceAttributes=age,gender,smile";
+
+                                                    string urlToRequestVerify = connectionEndPoint_Verify;
+                                                    HttpResponseMessage verifyResult;
+
+                                                    FaceVerifyModel faceToMatchModel = new FaceVerifyModel()
+                                                    {
+                                                        faceId1 = cameraFaceID,
+                                                        faceId2 = responseModel2[i].faceId
+                                                    };
+
+                                                    var json = JsonConvert.SerializeObject(faceToMatchModel);
+
+                                                    byte[] byteDataVerify = Encoding.UTF8.GetBytes(json);
+
+                                                    using (var contentVerify = new ByteArrayContent(byteDataVerify))
+                                                    {
+                                                        contentVerify.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                                                        response_verify = await client.PostAsync(urlToRequestVerify, contentVerify);
+                                                        if (response_verify.IsSuccessStatusCode)
+                                                        {
+                                                            var verifyResponseToString = await response_verify.Content.ReadAsStringAsync();
+                                                            var verifyResponseJson = JsonConvert.DeserializeObject<VerifyResponseModel>(verifyResponseToString);
+                                                            if (verifyResponseJson.isIdentical == true)
+                                                            {
+                                                                matched = true;
+                                                                FaceInfo model = new FaceInfo()
+                                                                {
+
+                                                                    FaceId1 = cameraFaceID,
+                                                                    FaceId2 = responseModel2[i].faceId,
+                                                                    //timeStamp = DateTime.UtcNow,
+                                                                    Age1 = camereFaceAge,
+                                                                    Age2 = responseModel2[i].faceAttributes.age
+                                                                };
+                                                                await AzureManager.AzureManagerInstance.PostFaceAnalysisInformation(model);
+                                                                i = faceCountInGallery;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if (matched == true)
+                                                {
+                                                    await DisplayAlert("Match Found!", "Go to the History tab to see age comparison.", "OK");
+                                                    EnableButtons();
+                                                }
+                                                else
+                                                {
+                                                    await DisplayAlert("No match found.", "Sorry, we could not find a match of the face between the two photos", "OK");
+                                                    EnableButtons();
+                                                }
                                             }
                                         }
+                                        else
+                                        {
+                                            await DisplayAlert("Something went wrong", "Process could not be completed", "OK");
+                                        }
                                     }
-                                    else
+                                    catch (Exception e)
                                     {
-                                        await DisplayAlert("Something went wrong", "Process could not be completed", "OK");
+                                        String exceptionInfo = e.ToString();
                                     }
                                 }
-                                catch(Exception e)
-                                {
-                                    String exceptionInfo = e.ToString();
-                                }
+
+                                //Debug.WriteLine(JsonPrettyPrint(responseString));
+
+                                //FaceInfo model = new FaceInfo()
+                                //{
+                                //    FaceID = faceToWorkWith.faceId,
+                                //    Happiness = (float)faceToWorkWith.faceAttributes.smile,
+                                //    Gender = faceToWorkWith.faceAttributes.gender
+                                //};
+                                //await AzureManager.AzureManagerInstance.PostFaceAnalysisInformation(model);
                             }
 
-                            //Debug.WriteLine(JsonPrettyPrint(responseString));
-
-                            //FaceInfo model = new FaceInfo()
-                            //{
-                            //    FaceID = faceToWorkWith.faceId,
-                            //    Happiness = (float)faceToWorkWith.faceAttributes.smile,
-                            //    Gender = faceToWorkWith.faceAttributes.gender
-                            //};
-                            //await AzureManager.AzureManagerInstance.PostFaceAnalysisInformation(model);
                         }
-
                     }
-                }
-                catch (Exception e)
-                {
-                    string error = e.ToString();
-                }
+                    catch (Exception e)
+                    {
+                        string error = e.ToString();
+                    }
 
-                //Get rid of file once we have finished using it
-                camerafile.Dispose();
-                galleryfile2.Dispose();
+                    //Get rid of file once we have finished using it
+                    camerafile.Dispose();
+                    galleryfile2.Dispose();
+                }
             }
-
+            catch(Exception ex)
+            {
+                await DisplayAlert("Something went wrong", "Sorry your request cannot be processed at this time. Please try again later", "OK");
+            }
         }
 
         static byte[] GetImageAsByteArray(MediaFile imageFile)

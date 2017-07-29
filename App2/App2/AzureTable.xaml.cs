@@ -2,12 +2,16 @@
 using Microsoft.WindowsAzure.MobileServices;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
+
+
+
 
 namespace App2
 {
@@ -23,9 +27,17 @@ namespace App2
 
         async void Handle_ClickedAsync(object sender, System.EventArgs e)
         {
-            List<FaceInfo> notHotDogInformation = await AzureManager.AzureManagerInstance.GetFaceInformation();
+            try
+            {
+                List<FaceInfo> notHotDogInformation = await AzureManager.AzureManagerInstance.GetFaceInformation();
+                FaceList.ItemsSource = notHotDogInformation;
+            }
+            catch(Exception ex)
+            {
+                await DisplayAlert("Error", "An error occured while trying to access the database. Please make sure the internet connection is active.", "OK");
+                Debug.WriteLine(ex.ToString());
+            }
 
-            FaceList.ItemsSource = notHotDogInformation;
         }
     }
 }

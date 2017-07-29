@@ -8,7 +8,8 @@
             <Label TextColor="#77d065" FontSize ="20" Text="Browse a photo to compare" />
             <Button x:Name="myButton" Text="Browse..." Clicked= "browsePhoto" />
             <Image x:Name="imageGallery" HeightRequest="100" WidthRequest="50"/>
-            <Label TextColor="#77d065" FontSize="20" Text="Take a photo"/>
+            <Label TextColor="#77d065" FontSize="20" Text="Find a person"/>
+            <Label FontSize="10" Text="Take a photo of someone you want to find in the above photo. Note that only 1 person is allowed in this photo"/>
             <Button x:Name="CameraButton" Text="Launch Camera" Clicked="loadCamera" />
             <Image x:Name="image" HeightRequest="100" WidthRequest="50"/>
             <Button x:Name ="AnalyseButton" Text="Analyse" Clicked= "analyse"/>

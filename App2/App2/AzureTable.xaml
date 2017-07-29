@@ -8,6 +8,7 @@
     </ContentPage.Padding>
     <ContentPage.Content>
         <StackLayout>
+            <Label FontSize ="14" Text="See age comparison between the two photos when there's a match." />
             <Button Text="See Match Results" TextColor="Black" BackgroundColor="WhiteSmoke" Clicked="Handle_ClickedAsync" />
             <ListView x:Name="FaceList" HasUnevenRows="True">
                 <ListView.ItemTemplate>
